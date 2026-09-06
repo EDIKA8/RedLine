@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REDLINE — საავტომობილო თემი</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --bg:#0c0e0f;
+    --panel:#15181a;
+    --panel-2:#1a1e20;
+    --border:#26292b;
+    --border-2:#333739;
+    --text:#eae7e1;
+    --muted:#8b9094;
+    --muted-2:#5f6366;
+    --flame:#ff5a2b;
+    --flame-dim:#c94620;
+    --amber:#ffb020;
+    --green-go:#39d98a;
+    --red-live:#ff3b30;
+    --radius:3px;
+    --font-display:'Noto Sans Georgian',sans-serif;
+    --font-body:'Noto Sans Georgian',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,90,43,0.07), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--flame);color:#0c0e0f;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px;}
+
+  /* ---------- CONNECTION BANNER ---------- */
+  .conn-banner{
+    display:none;
+    background:rgba(255,59,48,0.1);
+    border-bottom:1px solid rgba(255,59,48,0.3);
+    color:var(--red-live);
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    text-align:center;
+    padding:9px 16px;
+  }
+  .conn-banner.show{display:block;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:56px 20px 40px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+  }
+  .hero-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:36px;}
+  .tree{flex:none;}
+  .tree circle.bulb{fill:#2b2620;stroke:var(--border-2);stroke-width:1;}
+  .tree circle.amber-lit{
+    fill:var(--amber);
+    filter:drop-shadow(0 0 8px rgba(255,176,32,0.75));
+    animation:lightUp 1.8s ease forwards;
+    opacity:0;
+  }
+  .tree circle.green-lit{
+    fill:var(--green-go);
+    filter:drop-shadow(0 0 10px rgba(57,217,138,0.8));
+    animation:lightUp 1.8s ease forwards, pulseGo 2.6s ease-in-out 1.8s infinite;
+    opacity:0;
+  }
+  @keyframes lightUp{
+    0%{opacity:0;}
+    100%{opacity:1;}
+  }
+  @keyframes pulseGo{
+    0%,100%{filter:drop-shadow(0 0 10px rgba(57,217,138,0.8));}
+    50%{filter:drop-shadow(0 0 18px rgba(57,217,138,1));}
+  }
+  .amber-lit:nth-of-type(1){animation-delay:0.1s;}
+  .amber-lit:nth-of-type(2){animation-delay:0.5s;}
+  .amber-lit:nth-of-type(3){animation-delay:0.9s;}
+  .green-lit{animation-delay:1.3s, 1.8s;}
+
+  .hero-copy h1{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(30px,5vw,42px);
+    letter-spacing:-0.01em;
+    margin:0 0 10px;
+    color:#fff;
+  }
+  .hero-copy h1 span{color:var(--flame);}
+  .hero-copy p{
+    margin:0 0 16px;
+    color:var(--muted);
+    font-size:15.5px;
+    max-width:46ch;
+  }
+  .stat-row{display:flex;gap:20px;font-family:var(--font-mono);font-size:13px;color:var(--muted-2);flex-wrap:wrap;}
+  .stat-row b{color:var(--text);font-weight:600;}
+
+  @media (max-width:560px){
+    .hero-inner{flex-direction:column;align-items:flex-start;gap:20px;}
+  }
+
+  /* ---------- COMPOSER ---------- */
+  .composer-toggle{
+    display:flex;align-items:center;gap:10px;
+    width:100%;
+    margin:28px 0 0;
+    padding:15px 18px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--muted);
+    cursor:pointer;
+    font-size:14.5px;
+    text-align:right;
+  }
+  .composer-toggle:hover{border-color:var(--border-2);color:var(--text);}
+  .composer-toggle .plus{
+    font-family:var(--font-mono);
+    color:var(--flame);
+    font-size:18px;
+    line-height:1;
+  }
+
+  .composer{
+    margin-top:14px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    display:none;
+  }
+  .composer.open{display:block;}
+  .composer h2{
+    font-family:var(--font-display);
+    font-size:17px;
+    margin:0 0 18px;
+    font-weight:700;
+  }
+  .type-switch{display:flex;gap:8px;margin-bottom:18px;}
+  .type-switch button{
+    flex:1;
+    padding:11px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-weight:600;
+    font-size:12.5px;
+    letter-spacing:0.03em;
+    cursor:pointer;
+  }
+  .type-switch button.active[data-type="carmeet"]{
+    border-color:var(--amber);color:var(--amber);background:rgba(255,176,32,0.08);
+  }
+  .type-switch button.active[data-type="drag"]{
+    border-color:var(--flame);color:var(--flame);background:rgba(255,90,43,0.08);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;
+  }
+  .field-row{display:flex;gap:12px;}
+  .field-row .field{flex:1;}
+  input[type=text], input[type=datetime-local], input[type=url], textarea{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--text);
+    padding:10px 12px;
+    font-family:var(--font-body);
+    font-size:14.5px;
+  }
+  input:focus, textarea:focus{border-color:var(--border-2);}
+  textarea{resize:vertical;min-height:80px;}
+  .composer-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;align-items:center;}
+  .btn{
+    padding:10px 18px;
+    border-radius:var(--radius);
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn:hover{color:var(--text);border-color:var(--border-2);}
+  .btn-primary{
+    background:var(--flame);
+    border-color:var(--flame);
+    color:#0c0e0f;
+    font-weight:700;
+  }
+  .btn-primary:hover{background:#ff6d43;border-color:#ff6d43;color:#0c0e0f;}
+  .btn-primary:disabled{opacity:0.6;cursor:default;}
+  .error-msg{color:var(--red-live);font-size:13px;margin-top:8px;display:none;}
+
+  /* ---------- FILTER BAR ---------- */
+  .filter-bar{
+    display:flex;gap:8px;margin:32px 0 18px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .filter-bar button{
+    flex:none;
+    padding:8px 14px;
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:20px;
+    color:var(--muted);
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .filter-bar button.active{
+    background:var(--text);
+    color:var(--bg);
+    border-color:var(--text);
+    font-weight:600;
+  }
+
+  /* ---------- FEED ---------- */
+  .post{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .post-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px 0;
+  }
+  .tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    padding:4px 9px;
+    border-radius:2px;
+    border:1px solid;
+  }
+  .tag.carmeet{color:var(--amber);border-color:rgba(255,176,32,0.4);background:rgba(255,176,32,0.07);}
+  .tag.drag{color:var(--flame);border-color:rgba(255,90,43,0.4);background:rgba(255,90,43,0.07);}
+  .live-badge{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--red-live);
+  }
+  .live-dot{
+    width:6px;height:6px;border-radius:50%;background:var(--red-live);
+    animation:pulseGo 1.4s ease-in-out infinite;
+  }
+  .post-body{padding:12px 18px 6px;}
+  .post-body h3{
+    font-family:var(--font-display);
+    font-size:19px;
+    margin:0 0 8px;
+    font-weight:700;
+    color:#fff;
+  }
+  .post-meta{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--muted);
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .post-meta span{display:flex;align-items:center;gap:5px;}
+  .post-desc{color:#c8c5bf;font-size:14.5px;white-space:pre-wrap;margin-bottom:12px;}
+  .post-img{width:100%;max-height:340px;object-fit:cover;border-radius:2px;margin-bottom:12px;display:block;background:var(--panel-2);}
+  .post-author{font-size:12.5px;color:var(--muted-2);margin-bottom:14px;}
+  .post-author b{color:var(--muted);font-weight:600;}
+
+  .post-actions{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 18px;
+    border-top:1px solid var(--border);
+  }
+  .rsvp-btn{
+    padding:8px 16px;
+    border-radius:20px;
+    border:1px solid var(--border-2);
+    background:transparent;
+    color:var(--text);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;align-items:center;gap:7px;
+  }
+  .rsvp-btn.joined{
+    background:var(--green-go);
+    border-color:var(--green-go);
+    color:#0c0e0f;
+  }
+  .rsvp-count{font-family:var(--font-mono);color:var(--muted);}
+  .comment-toggle{
+    background:transparent;border:none;color:var(--muted);
+    font-size:13.5px;cursor:pointer;margin-inline-start:auto;
+    display:flex;align-items:center;gap:6px;
+  }
+  .comment-toggle:hover{color:var(--text);}
+
+  .comments{
+    display:none;
+    padding:4px 18px 16px;
+    border-top:1px solid var(--border);
+  }
+  .comments.open{display:block;}
+  .comment{
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+  }
+  .comment:last-of-type{border-bottom:none;}
+  .comment-author{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--amber);
+    margin-bottom:3px;
+  }
+  .comment-text{color:#d3d0ca;}
+  .comment-form{display:flex;gap:8px;margin-top:12px;}
+  .comment-form input{flex:1;}
+  .comment-form button{
+    padding:0 16px;
+    border-radius:var(--radius);
+    border:1px solid var(--border-2);
+    background:var(--panel-2);
+    color:var(--text);
+    cursor:pointer;
+    font-size:13px;
+  }
+  .comment-form button:hover{border-color:var(--flame);color:var(--flame);}
+  .no-comments{color:var(--muted-2);font-size:13px;padding:10px 0;}
+
+  .delete-btn{
+    background:transparent;border:none;color:var(--muted-2);
+    font-size:12px;cursor:pointer;
+  }
+  .delete-btn:hover{color:var(--red-live);}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--muted);
+    border:1px dashed var(--border-2);
+    border-radius:var(--radius);
+  }
+  .empty-state .big{font-size:32px;margin-bottom:10px;}
+
+  .loading-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--muted-2);
+    font-family:var(--font-mono);
+    font-size:13px;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted-2);
+    font-size:12.5px;
+    font-family:var(--font-mono);
+    padding:40px 20px 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="conn-banner" id="connBanner">კავშირი სერვერთან შეწყდა — ვცდილობთ თავიდან დაკავშირებას...</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <svg class="tree" width="46" height="130" viewBox="0 0 46 130" xmlns="http://www.w3.org/2000/svg">
+      <line x1="23" y1="4" x2="23" y2="126" stroke="#26292b" stroke-width="3"/>
+      <circle class="bulb" cx="23" cy="18" r="11"/>
+      <circle class="amber-lit" cx="23" cy="18" r="11"/>
+      <circle class="bulb" cx="23" cy="46" r="11"/>
+      <circle class="amber-lit" cx="23" cy="46" r="11"/>
+      <circle class="bulb" cx="23" cy="74" r="11"/>
+      <circle class="amber-lit" cx="23" cy="74" r="11"/>
+      <circle class="bulb" cx="23" cy="108" r="14"/>
+      <circle class="green-lit" cx="23" cy="108" r="14"/>
+    </svg>
+    <div class="hero-copy">
+      <h1>RED<span>LINE</span></h1>
+      <p>საავტომობილო თემის სივრცე — დაანონსე Carmeet ან Drag Race, შეხვდი მეგობრებს და გაზარდე თემი.</p>
+      <div class="stat-row" id="statRow">
+        <span><b id="statTotal">0</b> ღონისძიება</span>
+        <span><b id="statUpcoming">0</b> მომავალი</span>
+        <span><b id="statRsvp">0</b> გამოცხადებული</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <button class="composer-toggle" id="composerToggle">
+    <span class="plus">+</span> დაანონსე ახალი Carmeet ან Drag Race
+  </button>
+
+  <div class="composer" id="composer">
+    <h2>ახალი პოსტი</h2>
+    <div class="type-switch">
+      <button type="button" data-type="carmeet" class="active">CARMEET</button>
+      <button type="button" data-type="drag">DRAG RACE</button>
+    </div>
+    <div class="field">
+      <label for="fTitle">სათაური</label>
+      <input type="text" id="fTitle" placeholder="მაგ. შაბათის საღამოს კარმითინგი — თბილისი">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fLocation">მდებარეობა</label>
+        <input type="text" id="fLocation" placeholder="მაგ. ვაკის პარკი, თბილისი">
+      </div>
+      <div class="field">
+        <label for="fDate">თარიღი და დრო</label>
+        <input type="datetime-local" id="fDate">
+      </div>
+    </div>
+    <div class="field">
+      <label for="fDesc">აღწერა</label>
+      <textarea id="fDesc" placeholder="დაწერე დეტალები — რას ველოდოთ, რა მანქანები, სად შევკრებით..."></textarea>
+    </div>
+    <div class="field">
+      <label for="fImg">სურათის ბმული (არასავალდებულო)</label>
+      <input type="url" id="fImg" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label for="fName">შენი სახელი</label>
+      <input type="text" id="fName" placeholder="მაგ. გიორგი">
+    </div>
+    <div class="error-msg" id="composerError">გთხოვთ, შეავსოთ სათაური, მდებარეობა, თარიღი და სახელი.</div>
+    <div class="composer-actions">
+      <button class="btn" id="cancelBtn">გაუქმება</button>
+      <button class="btn btn-primary" id="submitBtn">გამოქვეყნება</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="active" data-filter="all">ყველა</button>
+    <button data-filter="carmeet">Carmeet</button>
+    <button data-filter="drag">Drag Race</button>
+    <button data-filter="upcoming">მომავალი</button>
+  </div>
+
+  <div id="feed"><div class="loading-state">იტვირთება...</div></div>
+
+</div>
+
+<footer>REDLINE — შექმნილია თემისთვის, თემის მიერ.</footer>
+
+<script>
+(function(){
+  const NAME_KEY = 'redline_username';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBdw9ieSqb16wzQCs0rQ0y4xeIxPUCJ6k",
+    authDomain: "redline-f50c6.firebaseapp.com",
+    projectId: "redline-f50c6",
+    storageBucket: "redline-f50c6.firebasestorage.app",
+    messagingSenderId: "653700356163",
+    appId: "1:653700356163:web:621595aa73988594e2dcf6"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const postsRef = db.collection('posts');
+
+  let posts = [];
+  let currentFilter = 'all';
+  let hasLoadedOnce = false;
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function escapeHTML(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  const monthsKa = ['იან','თებ','მარ','აპრ','მაი','ივნ','ივლ','აგვ','სექ','ოქტ','ნოე','დეკ'];
+  function formatDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    if(isNaN(d)) return '';
+    const day = d.getDate();
+    const month = monthsKa[d.getMonth()];
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${day} ${month}, ${hh}:${mm}`;
+  }
+  function isToday(iso){
+    if(!iso) return false;
+    const d = new Date(iso), now = new Date();
+    return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+  }
+  function isFuture(iso){
+    if(!iso) return false;
+    return new Date(iso).getTime() >= Date.now() - 1000*60*60*3;
+  }
+
+  // ---------- Realtime listener ----------
+  postsRef.orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+    posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    hasLoadedOnce = true;
+    document.getElementById('connBanner').classList.remove('show');
+    render();
+  }, (error) => {
+    console.error('Firestore error:', error);
+    document.getElementById('connBanner').classList.add('show');
+    if(!hasLoadedOnce){
+      document.getElementById('feed').innerHTML = `<div class="empty-state">
+        <div class="big">⚠️</div>
+        ვერ დავუკავშირდით სერვერს. დარწმუნდი, რომ Firestore Database ჩართულია და წესები (rules) იძლევა წვდომას.
+      </div>`;
+    }
+  });
+
+  // ---------- Composer ----------
+  const composerToggle = document.getElementById('composerToggle');
+  const composer = document.getElementById('composer');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const typeButtons = document.querySelectorAll('.type-switch button');
+  let selectedType = 'carmeet';
+
+  composerToggle.addEventListener('click', () => {
+    composer.classList.toggle('open');
+    if(composer.classList.contains('open')){
+      const savedName = localStorage.getItem(NAME_KEY);
+      if(savedName) document.getElementById('fName').value = savedName;
+      composer.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  });
+  cancelBtn.addEventListener('click', () => composer.classList.remove('open'));
+
+  typeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      typeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedType = btn.dataset.type;
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const title = document.getElementById('fTitle').value.trim();
+    const location = document.getElementById('fLocation').value.trim();
+    const date = document.getElementById('fDate').value;
+    const desc = document.getElementById('fDesc').value.trim();
+    const img = document.getElementById('fImg').value.trim();
+    const name = document.getElementById('fName').value.trim();
+    const errorMsg = document.getElementById('composerError');
+
+    if(!title || !location || !date || !name){
+      errorMsg.style.display = 'block';
+      return;
+    }
+    errorMsg.style.display = 'none';
+    localStorage.setItem(NAME_KEY, name);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'იგზავნება...';
+
+    postsRef.add({
+      type: selectedType,
+      title, location, date, desc, img, author: name,
+      createdAt: Date.now(),
+      rsvps: [],
+      comments: []
+    }).then(() => {
+      document.getElementById('fTitle').value = '';
+      document.getElementById('fLocation').value = '';
+      document.getElementById('fDate').value = '';
+      document.getElementById('fDesc').value = '';
+      document.getElementById('fImg').value = '';
+      composer.classList.remove('open');
+    }).catch((err) => {
+      console.error(err);
+      alert('პოსტის გამოქვეყნება ვერ მოხერხდა. სცადე თავიდან.');
+    }).finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'გამოქვეყნება';
+    });
+  });
+
+  // ---------- Filters ----------
+  document.querySelectorAll('.filter-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // ---------- Render ----------
+  function render(){
+    const feed = document.getElementById('feed');
+    let list = posts.slice();
+
+    if(currentFilter === 'carmeet') list = list.filter(p => p.type === 'carmeet');
+    else if(currentFilter === 'drag') list = list.filter(p => p.type === 'drag');
+    else if(currentFilter === 'upcoming'){
+      list = list.filter(p => isFuture(p.date));
+      list.sort((a,b) => new Date(a.date) - new Date(b.date));
+    }
+
+    document.getElementById('statTotal').textContent = posts.length;
+    document.getElementById('statUpcoming').textContent = posts.filter(p => isFuture(p.date)).length;
+    document.getElementById('statRsvp').textContent = posts.reduce((s,p) => s + (p.rsvps ? p.rsvps.length : 0), 0);
+
+    if(list.length === 0){
+      feed.innerHTML = `<div class="empty-state">
+        <div class="big">🏁</div>
+        ჯერ არცერთი პოსტი არ არის — იყავი პირველი, ვინც შეხვედრას დააანონსებს.
+      </div>`;
+      return;
+    }
+
+    const myName = localStorage.getItem(NAME_KEY) || '';
+
+    feed.innerHTML = list.map(p => {
+      const rsvps = p.rsvps || [];
+      const comments = p.comments || [];
+      const joined = myName && rsvps.includes(myName);
+      const live = isToday(p.date);
+      return `
+      <div class="post" data-id="${p.id}">
+        <div class="post-head">
+          <span class="tag ${p.type}">${p.type === 'carmeet' ? 'CARMEET' : 'DRAG RACE'}</span>
+          ${live ? `<span class="live-badge"><span class="live-dot"></span>დღეს</span>` : ''}
+        </div>
+        <div class="post-body">
+          <h3>${escapeHTML(p.title)}</h3>
+          <div class="post-meta">
+            <span>📍 ${escapeHTML(p.location)}</span>
+            <span>🕓 ${formatDate(p.date)}</span>
+          </div>
+          ${p.img ? `<img class="post-img" src="${escapeHTML(p.img)}" alt="" onerror="this.style.display='none'">` : ''}
+          ${p.desc ? `<div class="post-desc">${escapeHTML(p.desc)}</div>` : ''}
+          <div class="post-author">გამოაქვეყნა <b>${escapeHTML(p.author)}</b>${p.author === myName ? ` <button class="delete-btn" data-action="delete">წაშლა</button>` : ''}</div>
+        </div>
+        <div class="post-actions">
+          <button class="rsvp-btn ${joined ? 'joined' : ''}" data-action="rsvp">
+            ${joined ? '✓ მივდივარ' : 'მივდივარ'}
+          </button>
+          <span class="rsvp-count">${rsvps.length} მონაწილე</span>
+          <button class="comment-toggle" data-action="toggle-comments">კომენტარები (${comments.length}) ▾</button>
+        </div>
+        <div class="comments" data-comments>
+          ${comments.length === 0 ? '<div class="no-comments">ჯერ არცერთი კომენტარია — დაწერე პირველი.</div>' : comments.map(c => `
+            <div class="comment">
+              <div class="comment-author">${escapeHTML(c.author)}</div>
+              <div class="comment-text">${escapeHTML(c.text)}</div>
+            </div>
+          `).join('')}
+          <div class="comment-form">
+            <input type="text" placeholder="დაწერე კომენტარი..." data-comment-input>
+            <button data-action="submit-comment">გაგზავნა</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    feed.querySelectorAll('.post').forEach(el => {
+      const id = el.dataset.id;
+      const post = posts.find(p => p.id === id);
+      const wasOpen = el.querySelector('[data-comments]') && el.dataset.wasOpen === '1';
+
+      el.querySelector('[data-action="rsvp"]').addEventListener('click', () => {
+        let name = localStorage.getItem(NAME_KEY);
+        if(!name){
+          name = prompt('შენი სახელი, RSVP-სთვის:');
+          if(!name) return;
+          name = name.trim();
+          if(!name) return;
+          localStorage.setItem(NAME_KEY, name);
+        }
+        const rsvps = post.rsvps || [];
+        const isIn = rsvps.includes(name);
+        postsRef.doc(id).update({
+          rsvps: isIn
+            ? firebase.firestore.FieldValue.arrayRemove(name)
+            : firebase.firestore.FieldValue.arrayUnion(name)
+        }).catch(err => console.error(err));
+      });
+
+      const commentsPanel = el.querySelector('[data-comments]');
+      el.querySelector('[data-action="toggle-comments"]').addEventListener('click', () => {
+        commentsPanel.classList.toggle('open');
+      });
+
+      const delBtn = el.querySelector('[data-action="delete"]');
+      if(delBtn){
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if(confirm('წავშალო ეს პოსტი?')){
+            postsRef.doc(id).delete().catch(err => console.error(err));
+          }
+        });
+      }
+
+      const commentInput = el.querySelector('[data-comment-input]');
+      const submitComment = () => {
+        const text = commentInput.value.trim();
+        if(!text) return;
+        let name = localStorage.getItem(NAME_KEY);
+        if(!name){
+          name = prompt('შენი სახელი, კომენტარისთვის:');
+          if(!name) return;
+          name = name.trim();
+          if(!name) return;
+          localStorage.setItem(NAME_KEY, name);
+        }
+        commentInput.value = '';
+        postsRef.doc(id).update({
+          comments: firebase.firestore.FieldValue.arrayUnion({author: name, text})
+        }).then(() => {
+          commentsPanel.classList.add('open');
+        }).catch(err => console.error(err));
+      };
+      el.querySelector('[data-action="submit-comment"]').addEventListener('click', submitComment);
+      commentInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') submitComment();
+      });
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
