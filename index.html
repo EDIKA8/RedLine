@@ -563,6 +563,28 @@
 (function(){
   const NAME_KEY = 'redline_username';
 
+  // --- Telegram შეტყობინებები ---
+  // ჩაანაცვლე ორივე მნიშვნელობა შენი ბოტის ტოკენით და ჯგუფის/ჩატის chat_id-ით.
+  // (იხილე ინსტრუქცია: BotFather-თან ბოტის შექმნა და getUpdates-ით chat_id-ის მოძებნა)
+  const TELEGRAM_BOT_TOKEN = '8655197904:AAHz2Luz4RLHeT-_bKaHbWwC7XuIad4fcVg';
+  const TELEGRAM_CHAT_ID = '8388650144';
+
+  function sendTelegramNotification(post){
+    if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf('ჩასვი') === 0) return;
+    const typeLabel = post.type === 'carmeet' ? 'CARMEET' : 'DRAG RACE';
+    const text =
+      `🏁 ახალი პოსტი: ${typeLabel}\n` +
+      `${post.title}\n` +
+      `📍 ${post.location}\n` +
+      `🕓 ${formatDate(post.date)}\n` +
+      `გამოაქვეყნა: ${post.author}`;
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text })
+    }).catch(err => console.error('Telegram შეტყობინება ვერ გაიგზავნა:', err));
+  }
+
   const firebaseConfig = {
     apiKey: "AIzaSyBBdw9ieSqb16wzQCs0rQ0y4xeIxPUCJ6k",
     authDomain: "redline-f50c6.firebaseapp.com",
@@ -727,13 +749,16 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'იგზავნება...';
 
-    postsRef.add({
+    const newPost = {
       type: selectedType,
       title, location, date, desc, img, author: name,
       createdAt: Date.now(),
       rsvps: [],
       comments: []
-    }).then(() => {
+    };
+
+    postsRef.add(newPost).then(() => {
+      sendTelegramNotification(newPost);
       document.getElementById('fTitle').value = '';
       document.getElementById('fLocation').value = '';
       document.getElementById('fDate').value = '';
