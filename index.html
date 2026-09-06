@@ -11,17 +11,20 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
   :root{
-    --bg:#0c0e0f;
-    --panel:#15181a;
-    --panel-2:#1a1e20;
-    --border:#26292b;
-    --border-2:#333739;
-    --text:#eae7e1;
-    --muted:#8b9094;
-    --muted-2:#5f6366;
-    --flame:#ff5a2b;
-    --flame-dim:#c94620;
+    --asphalt:#0a0b0c;
+    --asphalt-2:#141517;
+    --asphalt-3:#1c1e20;
+    --border:#26282a;
+    --border-2:#34373a;
+    --line-paint:rgba(238,228,198,0.55);
+    --line-paint-dim:rgba(238,228,198,0.18);
+    --text:#f0ede6;
+    --muted:#9a9d9f;
+    --muted-2:#63666a;
+    --flame:#ff4423;
+    --flame-glow:rgba(255,68,35,0.55);
     --amber:#ffb020;
+    --amber-glow:rgba(255,176,32,0.5);
     --green-go:#39d98a;
     --red-live:#ff3b30;
     --radius:3px;
@@ -34,19 +37,21 @@
   body{
     margin:0;
     background:
-      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,90,43,0.07), transparent 60%),
-      var(--bg);
+      radial-gradient(ellipse 700px 380px at 18% -6%, rgba(255,176,32,0.08), transparent 60%),
+      radial-gradient(ellipse 700px 380px at 88% 8%, rgba(255,68,35,0.07), transparent 60%),
+      var(--asphalt);
+    background-attachment:fixed;
     color:var(--text);
     font-family:var(--font-body);
     line-height:1.55;
     -webkit-font-smoothing:antialiased;
   }
-  ::selection{background:var(--flame);color:#0c0e0f;}
+  ::selection{background:var(--flame);color:#0a0b0c;}
   a{color:inherit;}
   button{font-family:inherit;}
   :focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 
-  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px 80px;}
 
   /* ---------- CONNECTION BANNER ---------- */
   .conn-banner{
@@ -63,59 +68,67 @@
 
   /* ---------- HERO ---------- */
   .hero{
-    padding:56px 20px 40px;
+    position:relative;
+    padding:64px 20px 46px;
+    overflow:hidden;
     border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
   }
-  .hero-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:36px;}
-  .tree{flex:none;}
-  .tree circle.bulb{fill:#2b2620;stroke:var(--border-2);stroke-width:1;}
-  .tree circle.amber-lit{
-    fill:var(--amber);
-    filter:drop-shadow(0 0 8px rgba(255,176,32,0.75));
-    animation:lightUp 1.8s ease forwards;
-    opacity:0;
+  .flag-strip{
+    position:absolute;
+    top:0;left:0;right:0;
+    height:6px;
+    background-image:repeating-conic-gradient(#3a3a3a 0% 25%, #efeae3 0% 50%);
+    background-size:12px 12px;
+    opacity:0.35;
   }
-  .tree circle.green-lit{
-    fill:var(--green-go);
-    filter:drop-shadow(0 0 10px rgba(57,217,138,0.8));
-    animation:lightUp 1.8s ease forwards, pulseGo 2.6s ease-in-out 1.8s infinite;
-    opacity:0;
+  .light-sweep{
+    position:absolute;
+    top:-40%;
+    left:-30%;
+    width:60%;
+    height:180%;
+    background:linear-gradient(100deg, transparent, rgba(255,176,32,0.16), rgba(255,68,35,0.1), transparent);
+    transform:skewX(-18deg);
+    animation:sweep 2.4s ease-out 0.2s 1;
+    pointer-events:none;
   }
-  @keyframes lightUp{
-    0%{opacity:0;}
-    100%{opacity:1;}
+  @keyframes sweep{
+    0%{ left:-40%; opacity:0; }
+    15%{ opacity:1; }
+    100%{ left:120%; opacity:0; }
   }
-  @keyframes pulseGo{
-    0%,100%{filter:drop-shadow(0 0 10px rgba(57,217,138,0.8));}
-    50%{filter:drop-shadow(0 0 18px rgba(57,217,138,1));}
-  }
-  .amber-lit:nth-of-type(1){animation-delay:0.1s;}
-  .amber-lit:nth-of-type(2){animation-delay:0.5s;}
-  .amber-lit:nth-of-type(3){animation-delay:0.9s;}
-  .green-lit{animation-delay:1.3s, 1.8s;}
-
-  .hero-copy h1{
+  .hero-inner{position:relative;max-width:720px;margin:0 auto;}
+  .hero h1{
     font-family:var(--font-display);
     font-weight:800;
-    font-size:clamp(30px,5vw,42px);
+    font-size:clamp(38px,7vw,58px);
     letter-spacing:-0.01em;
-    margin:0 0 10px;
+    margin:0 0 12px;
     color:#fff;
+    text-shadow:
+      0 0 26px rgba(255,68,35,0.55),
+      0 0 60px rgba(255,176,32,0.22);
   }
-  .hero-copy h1 span{color:var(--flame);}
-  .hero-copy p{
-    margin:0 0 16px;
+  .hero h1 span{color:var(--flame);}
+  .hero p{
+    margin:0 0 22px;
     color:var(--muted);
     font-size:15.5px;
-    max-width:46ch;
+    max-width:48ch;
   }
-  .stat-row{display:flex;gap:20px;font-family:var(--font-mono);font-size:13px;color:var(--muted-2);flex-wrap:wrap;}
-  .stat-row b{color:var(--text);font-weight:600;}
-
-  @media (max-width:560px){
-    .hero-inner{flex-direction:column;align-items:flex-start;gap:20px;}
+  .stat-row{
+    display:flex;
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--muted-2);
+    border-top:1px dashed var(--line-paint-dim);
+    padding-top:14px;
+    max-width:440px;
   }
+  .stat-row > div{flex:1;padding-inline-end:14px;}
+  .stat-row > div:not(:last-child){border-right:1px dashed var(--line-paint-dim);}
+  .stat-row b{display:block;color:var(--text);font-weight:700;font-size:20px;font-family:var(--font-mono);}
+  .stat-row small{color:var(--muted-2);}
 
   /* ---------- COMPOSER ---------- */
   .composer-toggle{
@@ -123,15 +136,15 @@
     width:100%;
     margin:28px 0 0;
     padding:15px 18px;
-    background:var(--panel);
-    border:1px solid var(--border);
+    background:var(--asphalt-2);
+    border:1px dashed var(--border-2);
     border-radius:var(--radius);
     color:var(--muted);
     cursor:pointer;
     font-size:14.5px;
     text-align:right;
   }
-  .composer-toggle:hover{border-color:var(--border-2);color:var(--text);}
+  .composer-toggle:hover{border-color:var(--amber);color:var(--text);}
   .composer-toggle .plus{
     font-family:var(--font-mono);
     color:var(--flame);
@@ -141,7 +154,7 @@
 
   .composer{
     margin-top:14px;
-    background:var(--panel);
+    background:var(--asphalt-2);
     border:1px solid var(--border);
     border-radius:var(--radius);
     padding:22px;
@@ -158,7 +171,7 @@
   .type-switch button{
     flex:1;
     padding:11px;
-    background:var(--panel-2);
+    background:var(--asphalt-3);
     border:1px solid var(--border);
     border-radius:var(--radius);
     color:var(--muted);
@@ -170,19 +183,22 @@
   }
   .type-switch button.active[data-type="carmeet"]{
     border-color:var(--amber);color:var(--amber);background:rgba(255,176,32,0.08);
+    box-shadow:0 0 12px rgba(255,176,32,0.18) inset;
   }
   .type-switch button.active[data-type="drag"]{
-    border-color:var(--flame);color:var(--flame);background:rgba(255,90,43,0.08);
+    border-color:var(--flame);color:var(--flame);background:rgba(255,68,35,0.08);
+    box-shadow:0 0 12px rgba(255,68,35,0.18) inset;
   }
   .field{margin-bottom:14px;}
   .field label{
     display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;
+    font-family:var(--font-mono);
   }
   .field-row{display:flex;gap:12px;}
   .field-row .field{flex:1;}
   input[type=text], input[type=datetime-local], input[type=url], textarea{
     width:100%;
-    background:var(--bg);
+    background:var(--asphalt);
     border:1px solid var(--border);
     border-radius:var(--radius);
     color:var(--text);
@@ -190,7 +206,7 @@
     font-family:var(--font-body);
     font-size:14.5px;
   }
-  input:focus, textarea:focus{border-color:var(--border-2);}
+  input:focus, textarea:focus{border-color:var(--amber);}
   textarea{resize:vertical;min-height:80px;}
   .composer-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;align-items:center;}
   .btn{
@@ -206,16 +222,16 @@
   .btn-primary{
     background:var(--flame);
     border-color:var(--flame);
-    color:#0c0e0f;
+    color:#0a0b0c;
     font-weight:700;
   }
-  .btn-primary:hover{background:#ff6d43;border-color:#ff6d43;color:#0c0e0f;}
+  .btn-primary:hover{background:#ff5f43;border-color:#ff5f43;}
   .btn-primary:disabled{opacity:0.6;cursor:default;}
   .error-msg{color:var(--red-live);font-size:13px;margin-top:8px;display:none;}
 
   /* ---------- FILTER BAR ---------- */
   .filter-bar{
-    display:flex;gap:8px;margin:32px 0 18px;
+    display:flex;gap:8px;margin:32px 0 26px;
     overflow-x:auto;
     padding-bottom:2px;
   }
@@ -226,23 +242,63 @@
     border:1px solid var(--border);
     border-radius:20px;
     color:var(--muted);
-    font-size:13px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
     cursor:pointer;
     white-space:nowrap;
   }
   .filter-bar button.active{
     background:var(--text);
-    color:var(--bg);
+    color:var(--asphalt);
     border-color:var(--text);
-    font-weight:600;
+    font-weight:700;
   }
 
-  /* ---------- FEED ---------- */
+  /* ---------- TRACK / FEED ---------- */
+  .track-item{
+    display:flex;
+    gap:14px;
+    position:relative;
+  }
+  .track-item:not(:last-child){margin-bottom:4px;}
+  .track-rail{
+    flex:none;
+    width:20px;
+    position:relative;
+  }
+  .track-rail::before{
+    content:'';
+    position:absolute;
+    left:50%;
+    top:0;
+    bottom:-4px;
+    width:2px;
+    transform:translateX(-50%);
+    background:repeating-linear-gradient(to bottom, var(--line-paint) 0 10px, transparent 10px 20px);
+  }
+  .track-item:last-child .track-rail::before{
+    bottom:auto;
+    height:26px;
+  }
+  .track-node{
+    position:absolute;
+    top:22px;
+    left:50%;
+    transform:translateX(-50%);
+    width:11px;height:11px;
+    border-radius:50%;
+    z-index:1;
+  }
+  .track-node.carmeet{background:var(--amber);box-shadow:0 0 9px var(--amber-glow);}
+  .track-node.drag{background:var(--flame);box-shadow:0 0 9px var(--flame-glow);}
+
   .post{
-    background:var(--panel);
+    flex:1;
+    min-width:0;
+    background:var(--asphalt-2);
     border:1px solid var(--border);
     border-radius:var(--radius);
-    margin-bottom:16px;
+    margin-bottom:20px;
     overflow:hidden;
   }
   .post-head{
@@ -253,13 +309,13 @@
     font-family:var(--font-mono);
     font-size:11px;
     font-weight:700;
-    letter-spacing:0.04em;
-    padding:4px 9px;
+    letter-spacing:0.05em;
+    padding:4px 10px;
     border-radius:2px;
-    border:1px solid;
+    border:1px dashed;
   }
-  .tag.carmeet{color:var(--amber);border-color:rgba(255,176,32,0.4);background:rgba(255,176,32,0.07);}
-  .tag.drag{color:var(--flame);border-color:rgba(255,90,43,0.4);background:rgba(255,90,43,0.07);}
+  .tag.carmeet{color:var(--amber);border-color:rgba(255,176,32,0.5);}
+  .tag.drag{color:var(--flame);border-color:rgba(255,68,35,0.5);}
   .live-badge{
     display:flex;align-items:center;gap:6px;
     font-family:var(--font-mono);
@@ -268,56 +324,81 @@
   }
   .live-dot{
     width:6px;height:6px;border-radius:50%;background:var(--red-live);
+    box-shadow:0 0 6px var(--red-live);
     animation:pulseGo 1.4s ease-in-out infinite;
+  }
+  @keyframes pulseGo{
+    0%,100%{opacity:1;}
+    50%{opacity:0.4;}
   }
   .post-body{padding:12px 18px 6px;}
   .post-body h3{
     font-family:var(--font-display);
     font-size:19px;
-    margin:0 0 8px;
+    margin:0 0 10px;
     font-weight:700;
     color:#fff;
   }
   .post-meta{
     font-family:var(--font-mono);
     font-size:12.5px;
-    color:var(--muted);
+    color:var(--text);
     display:flex;
-    gap:14px;
+    gap:0;
     flex-wrap:wrap;
-    margin-bottom:10px;
+    margin-bottom:12px;
+    background:var(--asphalt);
+    border:1px solid var(--border);
+    border-radius:2px;
+    overflow:hidden;
   }
-  .post-meta span{display:flex;align-items:center;gap:5px;}
-  .post-desc{color:#c8c5bf;font-size:14.5px;white-space:pre-wrap;margin-bottom:12px;}
-  .post-img{width:100%;max-height:340px;object-fit:cover;border-radius:2px;margin-bottom:12px;display:block;background:var(--panel-2);}
-  .post-author{font-size:12.5px;color:var(--muted-2);margin-bottom:14px;}
-  .post-author b{color:var(--muted);font-weight:600;}
+  .post-meta span{
+    display:flex;align-items:center;gap:6px;
+    padding:7px 12px;
+    border-right:1px solid var(--border);
+    letter-spacing:0.02em;
+  }
+  .post-meta span:last-child{border-right:none;}
+  .post-desc{color:#cbc8c2;font-size:14.5px;white-space:pre-wrap;margin-bottom:12px;}
+  .post-img{width:100%;max-height:340px;object-fit:cover;border-radius:2px;margin-bottom:12px;display:block;background:var(--asphalt-3);}
+  .post-author{font-size:12.5px;color:var(--muted-2);margin-bottom:14px;font-family:var(--font-mono);}
+  .post-author b{color:var(--muted);font-weight:600;font-family:var(--font-body);}
 
   .post-actions{
     display:flex;align-items:center;gap:10px;
     padding:12px 18px;
-    border-top:1px solid var(--border);
+    border-top:1px dashed var(--border-2);
   }
   .rsvp-btn{
     padding:8px 16px;
     border-radius:20px;
-    border:1px solid var(--border-2);
+    border:1px solid var(--flame);
     background:transparent;
-    color:var(--text);
+    color:var(--flame);
     font-size:13.5px;
-    font-weight:600;
+    font-weight:700;
     cursor:pointer;
     display:flex;align-items:center;gap:7px;
+  }
+  .rsvp-btn::before{
+    content:'';
+    width:7px;height:7px;
+    border-radius:50%;
+    background:currentColor;
+    opacity:0.5;
   }
   .rsvp-btn.joined{
     background:var(--green-go);
     border-color:var(--green-go);
-    color:#0c0e0f;
+    color:#0a0b0c;
+    box-shadow:0 0 12px rgba(57,217,138,0.4);
   }
-  .rsvp-count{font-family:var(--font-mono);color:var(--muted);}
+  .rsvp-btn.joined::before{opacity:1;}
+  .rsvp-count{font-family:var(--font-mono);color:var(--muted);font-size:12.5px;}
   .comment-toggle{
     background:transparent;border:none;color:var(--muted);
-    font-size:13.5px;cursor:pointer;margin-inline-start:auto;
+    font-family:var(--font-mono);
+    font-size:12.5px;cursor:pointer;margin-inline-start:auto;
     display:flex;align-items:center;gap:6px;
   }
   .comment-toggle:hover{color:var(--text);}
@@ -325,7 +406,7 @@
   .comments{
     display:none;
     padding:4px 18px 16px;
-    border-top:1px solid var(--border);
+    border-top:1px dashed var(--border-2);
   }
   .comments.open{display:block;}
   .comment{
@@ -347,7 +428,7 @@
     padding:0 16px;
     border-radius:var(--radius);
     border:1px solid var(--border-2);
-    background:var(--panel-2);
+    background:var(--asphalt-3);
     color:var(--text);
     cursor:pointer;
     font-size:13px;
@@ -358,6 +439,7 @@
   .delete-btn{
     background:transparent;border:none;color:var(--muted-2);
     font-size:12px;cursor:pointer;
+    font-family:var(--font-mono);
   }
   .delete-btn:hover{color:var(--red-live);}
 
@@ -385,6 +467,14 @@
     font-family:var(--font-mono);
     padding:40px 20px 20px;
   }
+
+  @media (max-width:520px){
+    .track-rail{width:14px;}
+    .post-meta{flex-direction:column;}
+    .post-meta span{border-right:none;border-bottom:1px solid var(--border);}
+    .post-meta span:last-child{border-bottom:none;}
+    .stat-row{max-width:none;}
+  }
 </style>
 </head>
 <body>
@@ -392,26 +482,15 @@
 <div class="conn-banner" id="connBanner">კავშირი სერვერთან შეწყდა — ვცდილობთ თავიდან დაკავშირებას...</div>
 
 <div class="hero">
+  <div class="flag-strip"></div>
+  <div class="light-sweep"></div>
   <div class="hero-inner">
-    <svg class="tree" width="46" height="130" viewBox="0 0 46 130" xmlns="http://www.w3.org/2000/svg">
-      <line x1="23" y1="4" x2="23" y2="126" stroke="#26292b" stroke-width="3"/>
-      <circle class="bulb" cx="23" cy="18" r="11"/>
-      <circle class="amber-lit" cx="23" cy="18" r="11"/>
-      <circle class="bulb" cx="23" cy="46" r="11"/>
-      <circle class="amber-lit" cx="23" cy="46" r="11"/>
-      <circle class="bulb" cx="23" cy="74" r="11"/>
-      <circle class="amber-lit" cx="23" cy="74" r="11"/>
-      <circle class="bulb" cx="23" cy="108" r="14"/>
-      <circle class="green-lit" cx="23" cy="108" r="14"/>
-    </svg>
-    <div class="hero-copy">
-      <h1>RED<span>LINE</span></h1>
-      <p>საავტომობილო თემის სივრცე — დაანონსე Carmeet ან Drag Race, შეხვდი მეგობრებს და გაზარდე თემი.</p>
-      <div class="stat-row" id="statRow">
-        <span><b id="statTotal">0</b> ღონისძიება</span>
-        <span><b id="statUpcoming">0</b> მომავალი</span>
-        <span><b id="statRsvp">0</b> გამოცხადებული</span>
-      </div>
+    <h1>RED<span>LINE</span></h1>
+    <p>საავტომობილო სივრცე — დაანონსე Carmeet ან Drag Race, შეხვდი მეგობრებს და გაზარდე ჯგუფი.</p>
+    <div class="stat-row" id="statRow">
+      <div><b id="statTotal">0</b><small>ღონისძიება</small></div>
+      <div><b id="statUpcoming">0</b><small>მომავალი</small></div>
+      <div><b id="statRsvp">0</b><small>გამოცხადებული</small></div>
     </div>
   </div>
 </div>
@@ -447,8 +526,13 @@
       <textarea id="fDesc" placeholder="დაწერე დეტალები — რას ველოდოთ, რა მანქანები, სად შევკრებით..."></textarea>
     </div>
     <div class="field">
-      <label for="fImg">სურათის ბმული (არასავალდებულო)</label>
-      <input type="url" id="fImg" placeholder="https://...">
+      <label>ფოტო (არასავალდებულო)</label>
+      <input type="file" id="fImgFile" accept="image/*" style="display:none">
+      <button type="button" class="btn" id="fImgBtn">📷 ატვირთე ფოტო</button>
+      <div id="fImgPreviewWrap" style="display:none; margin-top:10px;">
+        <img id="fImgPreview" style="max-width:100%; max-height:180px; border-radius:2px; display:block; border:1px solid var(--border);">
+        <button type="button" class="delete-btn" id="fImgRemove" style="margin-top:8px;">ფოტოს წაშლა</button>
+      </div>
     </div>
     <div class="field">
       <label for="fName">შენი სახელი</label>
@@ -472,7 +556,7 @@
 
 </div>
 
-<footer>REDLINE — შექმნილია თემისთვის, თემის მიერ.</footer>
+<footer>REDLINE — შექმნილია Kahketi Car Club ისთვის.</footer>
 
 <script>
 (function(){
@@ -495,9 +579,6 @@
   let currentFilter = 'all';
   let hasLoadedOnce = false;
 
-  function uid(){
-    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-  }
   function escapeHTML(str){
     const div = document.createElement('div');
     div.textContent = str;
@@ -548,7 +629,65 @@
   const cancelBtn = document.getElementById('cancelBtn');
   const submitBtn = document.getElementById('submitBtn');
   const typeButtons = document.querySelectorAll('.type-switch button');
+  const fImgBtn = document.getElementById('fImgBtn');
+  const fImgFile = document.getElementById('fImgFile');
+  const fImgPreviewWrap = document.getElementById('fImgPreviewWrap');
+  const fImgPreview = document.getElementById('fImgPreview');
+  const fImgRemove = document.getElementById('fImgRemove');
   let selectedType = 'carmeet';
+  let selectedImageDataUrl = '';
+
+  function resizeImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > height){
+            if(width > maxDim){ height = Math.round(height * (maxDim / width)); width = maxDim; }
+          } else {
+            if(height > maxDim){ width = Math.round(width * (maxDim / height)); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('სურათის ჩატვირთვა ვერ მოხერხდა'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('ფაილის წაკითხვა ვერ მოხერხდა'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  fImgBtn.addEventListener('click', () => fImgFile.click());
+
+  fImgFile.addEventListener('change', () => {
+    const file = fImgFile.files[0];
+    if(!file) return;
+    fImgBtn.disabled = true;
+    fImgBtn.textContent = 'მუშავდება...';
+    resizeImage(file, 1000, 0.72).then((dataUrl) => {
+      selectedImageDataUrl = dataUrl;
+      fImgPreview.src = dataUrl;
+      fImgPreviewWrap.style.display = 'block';
+    }).catch((err) => {
+      console.error(err);
+      alert('ფოტოს დამუშავება ვერ მოხერხდა. სცადე სხვა ფოტო.');
+    }).finally(() => {
+      fImgBtn.disabled = false;
+      fImgBtn.textContent = '📷 ატვირთე ფოტო';
+    });
+  });
+
+  fImgRemove.addEventListener('click', () => {
+    selectedImageDataUrl = '';
+    fImgFile.value = '';
+    fImgPreviewWrap.style.display = 'none';
+  });
 
   composerToggle.addEventListener('click', () => {
     composer.classList.toggle('open');
@@ -573,7 +712,7 @@
     const location = document.getElementById('fLocation').value.trim();
     const date = document.getElementById('fDate').value;
     const desc = document.getElementById('fDesc').value.trim();
-    const img = document.getElementById('fImg').value.trim();
+    const img = selectedImageDataUrl;
     const name = document.getElementById('fName').value.trim();
     const errorMsg = document.getElementById('composerError');
 
@@ -598,7 +737,9 @@
       document.getElementById('fLocation').value = '';
       document.getElementById('fDate').value = '';
       document.getElementById('fDesc').value = '';
-      document.getElementById('fImg').value = '';
+      selectedImageDataUrl = '';
+      fImgFile.value = '';
+      fImgPreviewWrap.style.display = 'none';
       composer.classList.remove('open');
     }).catch((err) => {
       console.error(err);
@@ -651,38 +792,43 @@
       const joined = myName && rsvps.includes(myName);
       const live = isToday(p.date);
       return `
-      <div class="post" data-id="${p.id}">
-        <div class="post-head">
-          <span class="tag ${p.type}">${p.type === 'carmeet' ? 'CARMEET' : 'DRAG RACE'}</span>
-          ${live ? `<span class="live-badge"><span class="live-dot"></span>დღეს</span>` : ''}
+      <div class="track-item">
+        <div class="track-rail">
+          <div class="track-node ${p.type}"></div>
         </div>
-        <div class="post-body">
-          <h3>${escapeHTML(p.title)}</h3>
-          <div class="post-meta">
-            <span>📍 ${escapeHTML(p.location)}</span>
-            <span>🕓 ${formatDate(p.date)}</span>
+        <div class="post" data-id="${p.id}">
+          <div class="post-head">
+            <span class="tag ${p.type}">${p.type === 'carmeet' ? 'CARMEET' : 'DRAG RACE'}</span>
+            ${live ? `<span class="live-badge"><span class="live-dot"></span>დღეს</span>` : ''}
           </div>
-          ${p.img ? `<img class="post-img" src="${escapeHTML(p.img)}" alt="" onerror="this.style.display='none'">` : ''}
-          ${p.desc ? `<div class="post-desc">${escapeHTML(p.desc)}</div>` : ''}
-          <div class="post-author">გამოაქვეყნა <b>${escapeHTML(p.author)}</b>${p.author === myName ? ` <button class="delete-btn" data-action="delete">წაშლა</button>` : ''}</div>
-        </div>
-        <div class="post-actions">
-          <button class="rsvp-btn ${joined ? 'joined' : ''}" data-action="rsvp">
-            ${joined ? '✓ მივდივარ' : 'მივდივარ'}
-          </button>
-          <span class="rsvp-count">${rsvps.length} მონაწილე</span>
-          <button class="comment-toggle" data-action="toggle-comments">კომენტარები (${comments.length}) ▾</button>
-        </div>
-        <div class="comments" data-comments>
-          ${comments.length === 0 ? '<div class="no-comments">ჯერ არცერთი კომენტარია — დაწერე პირველი.</div>' : comments.map(c => `
-            <div class="comment">
-              <div class="comment-author">${escapeHTML(c.author)}</div>
-              <div class="comment-text">${escapeHTML(c.text)}</div>
+          <div class="post-body">
+            <h3>${escapeHTML(p.title)}</h3>
+            <div class="post-meta">
+              <span>📍 ${escapeHTML(p.location)}</span>
+              <span>🕓 ${formatDate(p.date)}</span>
             </div>
-          `).join('')}
-          <div class="comment-form">
-            <input type="text" placeholder="დაწერე კომენტარი..." data-comment-input>
-            <button data-action="submit-comment">გაგზავნა</button>
+            ${p.img ? `<img class="post-img" src="${escapeHTML(p.img)}" alt="" onerror="this.style.display='none'">` : ''}
+            ${p.desc ? `<div class="post-desc">${escapeHTML(p.desc)}</div>` : ''}
+            <div class="post-author">გამოაქვეყნა <b>${escapeHTML(p.author)}</b>${p.author === myName ? ` <button class="delete-btn" data-action="delete">წაშლა</button>` : ''}</div>
+          </div>
+          <div class="post-actions">
+            <button class="rsvp-btn ${joined ? 'joined' : ''}" data-action="rsvp">
+              ${joined ? 'მივდივარ' : 'მივდივარ'}
+            </button>
+            <span class="rsvp-count">${rsvps.length} მონაწილე</span>
+            <button class="comment-toggle" data-action="toggle-comments">კომენტარები (${comments.length}) ▾</button>
+          </div>
+          <div class="comments" data-comments>
+            ${comments.length === 0 ? '<div class="no-comments">ჯერ არცერთი კომენტარია — დაწერე პირველი.</div>' : comments.map(c => `
+              <div class="comment">
+                <div class="comment-author">${escapeHTML(c.author)}</div>
+                <div class="comment-text">${escapeHTML(c.text)}</div>
+              </div>
+            `).join('')}
+            <div class="comment-form">
+              <input type="text" placeholder="დაწერე კომენტარი..." data-comment-input>
+              <button data-action="submit-comment">გაგზავნა</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -691,7 +837,6 @@
     feed.querySelectorAll('.post').forEach(el => {
       const id = el.dataset.id;
       const post = posts.find(p => p.id === id);
-      const wasOpen = el.querySelector('[data-comments]') && el.dataset.wasOpen === '1';
 
       el.querySelector('[data-action="rsvp"]').addEventListener('click', () => {
         let name = localStorage.getItem(NAME_KEY);
